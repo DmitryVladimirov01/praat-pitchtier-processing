@@ -38,6 +38,7 @@ from sklearn.model_selection import train_test_split
 from pandas.errors import EmptyDataError
 from scipy.spatial.distance import cosine
 from collections import OrderedDict
+from sklearn.metrics import f1_score
 
 #  Здесь содержатся две папки, в которых находятся данные,
 # одна содержит тестовые данные, на которых программа и писалась
@@ -145,9 +146,10 @@ def main():
     pairs = make_pairs(dictionary)
     train_set, test_set = train_test_split(pairs)
     ts_ss_dictionary = make_ts_ss_dictionary(train_set, dictionary)
-    sort_dictionary(ts_ss_dictionary)
-    check_list = transform_to_yes_no_list(pairs)
-    print(check_list)
+    f1 = sort_dictionary(ts_ss_dictionary)
+    print(f1)
+    # check_list = transform_to_yes_no_list(pairs)
+    # print(check_list)
 
 
 # выбрасывает ошибку при прохождении основного датасета
@@ -192,7 +194,9 @@ def sort_dictionary(ts_ss_dictionary):
 
     :param ts_ss_dictionary:
     :return:
+
     """
+    ts_ss_dict = []
     def print_sorted(sort_dict):
         """
         Вспомогательная функция печати отсортированного словаря
@@ -204,17 +208,29 @@ def sort_dictionary(ts_ss_dictionary):
         for item in tqdm(sort_dict):
             user1 = re.search("user\d+", item[0][0]).group()
             user2 = re.search("user\d+", item[0][1]).group()
-            print(user1, user2, item[1])
+            # print(user1, user2, item[1])
             if user1 == user2:
+                ts_ss_dict.append(1)
                 count += 1
-                print("YES")
+                # print("YES")
             else:
-                print("NO")
-        print(f"{count} / {len(sort_dict)}")
+                ts_ss_dict.append(0)
+                # print("NO")
+        # print(f"{count} / {len(sort_dict)}")
 
     sort_dict = sorted(ts_ss_dictionary.items(), key=lambda x: x[1], reverse=True)
     print_sorted(sort_dict)
-    return sort_dict
+
+    sum_d = sum(ts_ss_dict)
+    # print(sum_d)
+    # print(ts_ss_dict)
+    
+    pos = [1 for _ in range(sum_d)]
+    neg = [0 for _ in range(len(ts_ss_dict) - sum_d)]
+    real = pos + neg
+    f1 = f1_score(real, ts_ss_dict, average="binary")
+    print(f1)
+    return f1
 
 
 def transform_to_yes_no_list(pairs):
